@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
  * create an instance of this fragment.
  *
  */
-open class BaseFragment : Fragment() {
+open abstract class BaseFragment : Fragment() {
     private var listener: OnFragmentInteractionListener? = null
 
     fun onButtonPressed(uri: Uri) {
