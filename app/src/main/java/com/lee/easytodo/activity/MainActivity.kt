@@ -1,18 +1,19 @@
 package com.lee.easytodo.activity
 
+import android.animation.*
 import android.content.ClipData
 import android.content.Context
 import android.inputmethodservice.ExtractEditText
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
@@ -26,9 +27,10 @@ import com.lee.easytodo.fragment.IdeaPoolFragment
 import com.lee.easytodo.fragment.ScheduleFragment
 import com.lee.easytodo.fragment.base.BaseFragment
 import com.lee.easytodo.presenter.MainActivityPresenter
+import com.lee.easytodo.util.DragActionInteractor
 import com.lee.easytodo.util.logD
-import com.lee.easytodo.view.InteractDragEventViewPager
-import com.lee.easytodo.view.calendarview.OnDraggedAboveListener
+import com.lee.easytodo.view.animation.TextGeneratingView
+import com.lee.easytodo.view.drag.InteractDragEventViewPager
 
 
 /**
@@ -47,9 +49,6 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
     private lateinit var pagerAdapter: FragmentPagerAdapter
     private lateinit var tabLayout: TabLayout
 
-    //TODO TEST
-    private lateinit var buttonToDrag: Button
-
     private var textInputView: View? = null
     private var textViewHolder: TextInputViewHolder? = null
     private var voiceInputView: View? = null
@@ -63,6 +62,9 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
 
         mainActivityPresenter = MainActivityPresenter(this)
         mainActivityPresenter.load()
+
+        //TODO test
+//        startActivity(Intent(this, TestActivity::class.java))
     }
 
     fun initView() {
@@ -71,25 +73,43 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
         viewPagerContent = findViewById(R.id.viewPagerContent)
         fragmentModels.add(
             0,
-            FragmentModel(ScheduleFragment(), R.string.main_activity_schedule_fragment_title)
+            FragmentModel(
+                ScheduleFragment(),
+                R.string.main_activity_schedule_fragment_title,
+                Companion.FragmentTag.SCHEDULE_FRAGMENT
+            )
         )
         fragmentModels.add(
             1,
-            FragmentModel(IdeaPoolFragment(), R.string.main_activity_idea_pool_fragment_title)
+            FragmentModel(
+                IdeaPoolFragment(),
+                R.string.main_activity_idea_pool_fragment_title,
+                Companion.FragmentTag.IDEAPOOL_FRAGMENT
+            )
         )
-
-        buttonToDrag = findViewById(R.id.buttonToDrag)
     }
 
     fun initAction() {
         floatingActionButton.setOnClickListener(this)
         floatingActionButton.setOnLongClickListener(this)
 
-        viewPagerContent.onDraggedEdgeListener = object : OnDraggedAboveListener {
-            override fun onDraggedEdgeLong(direction: OnDraggedAboveListener.Direction) {
-                mainActivityPresenter.onScroll(direction)
-            }
-        }
+        viewPagerContent.dragActionInteractor = DragActionInteractor.Companion.Builder()
+            .isInteractDrop(false)
+            .isInteractLocationChange(false)
+            .isInteractStayEdgeLong(true)
+            .timeStepStayLong(DragActionInteractor.DEFAULT_TIME_STEP_STAY_LONG_SHORT)
+            .onDragInteractListener(object : DragActionInteractor.OnDragActionListener {
+                override fun onDrop(x: Float, y: Float, clipData: ClipData) {}
+
+                override fun onLocationChanged(x: Float, y: Float) {}
+
+                override fun onStayEdgeLong(direction: DragActionInteractor.DIRECTION) {
+                    mainActivityPresenter.onScroll(direction)
+                }
+
+            })
+            .build()
+
         pagerAdapter = object :
             FragmentPagerAdapter(supportFragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
             override fun getItem(position: Int): Fragment {
@@ -111,7 +131,6 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
             override fun getPageTitle(position: Int): CharSequence? {
                 return getString(fragmentModels[position].string)
             }
-
         }
         viewPagerContent.adapter = pagerAdapter
 
@@ -130,8 +149,6 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
                 logD("page selected $position")
             }
         })
-
-        buttonToDrag.setOnLongClickListener(this)
     }
 
     fun scrollLeft() {
@@ -144,6 +161,11 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
         if (viewPagerContent.currentItem < fragmentModels.size - 1) {
             viewPagerContent.currentItem += 1
         }
+    }
+
+    fun onGeneratedNewMaterial(material: String?) {
+        var clipData = ClipData("yes", arrayOf("yes"), ClipData.Item(material))
+        fragmentModels[viewPagerContent.currentItem].fragment.onActivityInteraction(clipData)
     }
 
     fun initTextInputView() {
@@ -166,14 +188,13 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
                 var newText = s.toString()
                 logD("input text changed: $newText")
                 if (TextUtils.isEmpty(newText)) {
-                    textViewHolder?.buttonSendMaterial?.visibility = View.GONE
+                    textViewHolder?.imageButtonSendMaterial?.visibility = View.GONE
                 } else {
-                    textViewHolder?.buttonSendMaterial?.visibility = View.VISIBLE
+                    textViewHolder?.imageButtonSendMaterial?.visibility = View.VISIBLE
                 }
             }
-
         })
-        textViewHolder?.buttonSendMaterial?.setOnClickListener(this)
+        textViewHolder?.imageButtonSendMaterial?.setOnClickListener(this)
     }
 
     fun initVoiceInputView() {
@@ -190,7 +211,7 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.floatingActionButton -> mainActivityPresenter.onCreateMaterialByText()
-            R.id.buttonSendMaterial -> mainActivityPresenter.onCreatedMaterialByText()
+            R.id.imageButtonSendMaterial -> mainActivityPresenter.onCreatedMaterialByText()
             else -> {
                 //do Nothing
             }
@@ -209,24 +230,6 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
                 return true
             }
 
-            R.id.buttonToDrag -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    v?.startDragAndDrop(
-                        ClipData(
-                            "button",
-                            arrayOf("from button"),
-                            ClipData.Item("item")),
-                        View.DragShadowBuilder(v), v, 0)
-                } else {
-                    v?.startDrag(
-                        ClipData("button", arrayOf("from button"), ClipData.Item("item")),
-                        View.DragShadowBuilder(v),
-                        v,
-                        0
-                    )
-                }
-                return true
-            }
             else -> return false
         }
     }
@@ -246,10 +249,81 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
         imm.showSoftInput(textViewHolder?.editTextMaterial, InputMethodManager.SHOW_IMPLICIT)
     }
 
-    fun dismissTextInputUI() {
+    fun afterAnimation() {
+        textInputView?.visibility = View.GONE
+        dismissForegroundView(textInputView!!)
+
+        textViewHolder!!.textGeneratingView?.translationX =
+            textViewHolder!!.textGeneratingView?.translationX + 400f
+        textViewHolder?.textGeneratingView?.setProgress(0f)
+        textViewHolder?.textGeneratingView?.alpha = 1.0f
+        textViewHolder?.editTextMaterial?.alpha = 1.0f
+        textInputView?.alpha = 1.0f
+    }
+
+    fun dismissTextInputUI(byCancel: Boolean) {
         if (textInputView != null && textInputView?.visibility != View.GONE) {
-            textInputView?.visibility = View.GONE
-            dismissForegroundView(textInputView!!)
+
+            if (byCancel) {
+                textInputView?.visibility = View.GONE
+                dismissForegroundView(textInputView!!)
+            } else {
+                //by create text
+                //animation
+
+                var frameStart = Keyframe.ofFloat(0f, 0f)
+                var frameMiddle = Keyframe.ofFloat(0.4f, 80f)
+                var frameEnd = Keyframe.ofFloat(1.0f, 100f)
+
+                var holder =
+                    PropertyValuesHolder.ofKeyframe("progress", frameStart, frameMiddle, frameEnd)
+
+                var textGeneratingAnimator = ObjectAnimator.ofPropertyValuesHolder(
+                    textViewHolder?.textGeneratingView,
+                    holder
+                ).setDuration(500)
+
+                var editTextAlphaAnimator =
+                    ObjectAnimator.ofFloat(textViewHolder?.editTextMaterial, "alpha", 1.0f, 0f)
+                        .setDuration(500)
+
+                var textMovingAnimator = ObjectAnimator.ofFloat(
+                    textViewHolder?.textGeneratingView,
+                    "translationX",
+                    textViewHolder!!.textGeneratingView?.translationX,
+                    textViewHolder!!.textGeneratingView?.translationX - 400f
+                )
+                textMovingAnimator.interpolator = AccelerateDecelerateInterpolator()
+
+                var movingTextAlphaAnimator =
+                    ObjectAnimator.ofFloat(textViewHolder?.textGeneratingView, "alpha", 1.0f, 0f)
+
+
+                var containerAlphaAnimator =
+                    ObjectAnimator.ofFloat(textInputView!!, "alpha", 1.0f, 0.0f)
+                containerAlphaAnimator.addListener(object : Animator.AnimatorListener {
+                    override fun onAnimationRepeat(animation: Animator?) {
+                    }
+
+                    override fun onAnimationEnd(animation: Animator?) {
+                        afterAnimation()
+                    }
+
+                    override fun onAnimationStart(animation: Animator?) {
+                    }
+
+                    override fun onAnimationCancel(animation: Animator?) {
+                        afterAnimation()
+                    }
+                })
+
+                var animatorSet = AnimatorSet()
+                animatorSet.play(textGeneratingAnimator).with(editTextAlphaAnimator)
+                animatorSet.play(textMovingAnimator).after(textGeneratingAnimator)
+                animatorSet.play(textMovingAnimator).with(movingTextAlphaAnimator)
+                animatorSet.play(textMovingAnimator).with(containerAlphaAnimator)
+                animatorSet.start()
+            }
         }
     }
 
@@ -314,18 +388,29 @@ class MainActivity : BaseActivity(), View.OnClickListener, View.OnLongClickListe
 
     companion object {
 
-        class FragmentModel(fragment: BaseFragment, @StringRes string: Int) {
+        class FragmentModel(
+            fragment: BaseFragment, @StringRes string: Int,
+            fragmentTag: FragmentTag
+        ) {
             val fragment = fragment
             val string = string
+            val tag = fragmentTag
+        }
+
+        enum class FragmentTag {
+            SCHEDULE_FRAGMENT,
+            IDEAPOOL_FRAGMENT
         }
 
         class TextInputViewHolder {
+            val textGeneratingView: TextGeneratingView
             val editTextMaterial: ExtractEditText
-            val buttonSendMaterial: Button
+            val imageButtonSendMaterial: ImageButton
 
             constructor(root: View) {
                 editTextMaterial = root.findViewById(R.id.editTextCreateMaterial)
-                buttonSendMaterial = root.findViewById(R.id.buttonSendMaterial)
+                imageButtonSendMaterial = root.findViewById(R.id.imageButtonSendMaterial)
+                textGeneratingView = root.findViewById(R.id.textGeneratingView)
             }
         }
 

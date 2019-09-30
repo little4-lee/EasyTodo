@@ -43,18 +43,11 @@ class ScheduleModel {
         }
 
         enum class Level {
-            IMPORTANT_EMERGENCY,
-            IMPORTANT_NOT_EMERGENCY,
-            NOT_IMPORTANT_EMERGENCY,
-            NOT_IMPORTANT_NOT_EMERGENCY
+            IMPORTANT_EMERGENCY, IMPORTANT_NOT_EMERGENCY, NOT_IMPORTANT_EMERGENCY, NOT_IMPORTANT_NOT_EMERGENCY
         }
 
         enum class Progress {
-            PERCENT_0,
-            PERCENT_25,
-            PERCENT_50,
-            PERCENT_75,
-            PERCENT_100
+            PERCENT_0, PERCENT_25, PERCENT_50, PERCENT_75, PERCENT_100
         }
     }
 }

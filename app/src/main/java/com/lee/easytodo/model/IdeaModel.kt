@@ -2,7 +2,7 @@ package com.lee.easytodo.model
 
 import android.os.SystemClock
 
-class IdeaModel {
+class IdeaModel{
     var id: String
     var content: String
     var timestamp: Long

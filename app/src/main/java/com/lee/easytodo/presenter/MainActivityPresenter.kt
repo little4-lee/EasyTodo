@@ -5,8 +5,8 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import com.lee.easytodo.activity.MainActivity
+import com.lee.easytodo.util.DragActionInteractor
 import com.lee.easytodo.util.logD
-import com.lee.easytodo.view.calendarview.OnDraggedAboveListener
 
 /**
  * @package com.lee.easytodo.presenter
@@ -40,7 +40,12 @@ class MainActivityPresenter : BasePersenter{
     fun onCreatedMaterialByText() {
         var material = mainActivity?.popMaterialText()
         logD("pop Material by text: $material")
-        mainActivity?.dismissTextInputUI()
+        mainActivity?.dismissTextInputUI(false)
+        dispatchNewMaterial(material)
+    }
+
+    fun dispatchNewMaterial(material: String?){
+        mainActivity?.onGeneratedNewMaterial(material)
     }
 
     fun onCreatedMaterialByVoice() {
@@ -71,7 +76,7 @@ class MainActivityPresenter : BasePersenter{
 
     fun cancelInputUI () {
         mainActivity?.dismissVoiceInputUI()
-        mainActivity?.dismissTextInputUI()
+        mainActivity?.dismissTextInputUI(true)
     }
 
     fun cancel(): Boolean {
@@ -83,10 +88,10 @@ class MainActivityPresenter : BasePersenter{
         }
     }
 
-    fun onScroll(direction: OnDraggedAboveListener.Direction) {
+    fun onScroll(direction: DragActionInteractor.DIRECTION) {
         when (direction) {
-            OnDraggedAboveListener.Direction.LEFT -> mainActivity?.scrollLeft()
-            OnDraggedAboveListener.Direction.RIGHT -> mainActivity?.scrollRight()
+            DragActionInteractor.DIRECTION.LEFT -> mainActivity?.scrollLeft()
+            DragActionInteractor.DIRECTION.RIGHT -> mainActivity?.scrollRight()
         }
     }
 

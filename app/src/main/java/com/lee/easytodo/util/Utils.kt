@@ -1,12 +1,14 @@
 package com.lee.easytodo.util
 
+import android.content.Context
 import android.util.Log
 import com.lee.easytodo.BuildConfig
 
 
 //----------------------log--------------------------
 var logInRelease = false
-const val LOG_TAG = "easy_todo_tag"
+//const val LOG_TAG = "easy_todo_tag"
+const val LOG_TAG = "lee_view"
 
 fun logV(log: String) {
     if (BuildConfig.DEBUG || logInRelease) {
@@ -57,6 +59,15 @@ fun logW(tag: String, log: String) {
 }
 
 //----------------------log--------------------------
+
+//----------------------size--------------------------
+
+fun dipToPx(context: Context, dpValue: Float): Float {
+    val scale = context.resources.displayMetrics.density
+    return dpValue * scale + 0.5f
+}
+//----------------------size--------------------------
+
 
 //----------------------hash--------------------------
 

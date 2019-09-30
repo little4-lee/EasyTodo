@@ -1,5 +1,6 @@
 package com.lee.easytodo.activity.base
 
+import android.content.ClipData
 import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
@@ -37,6 +38,10 @@ open class BaseActivity : AppCompatActivity() {
 
     fun dismissForegroundView(view: View) {
         (window.decorView as FrameLayout).removeView(view)
+    }
+
+    interface OnActivityInteractionListener {
+        fun onActivityInteraction(clipData: ClipData)
     }
 
 }

@@ -2,7 +2,9 @@ package com.lee.easytodo.fragment.base
 
 import android.content.Context
 import android.net.Uri
+import android.view.View
 import androidx.fragment.app.Fragment
+import com.lee.easytodo.activity.base.BaseActivity
 
 /**
  * A simple [Fragment] subclass.
@@ -13,8 +15,12 @@ import androidx.fragment.app.Fragment
  * create an instance of this fragment.
  *
  */
-open abstract class BaseFragment : Fragment() {
+abstract class BaseFragment : Fragment(), BaseActivity.OnActivityInteractionListener {
     private var listener: OnFragmentInteractionListener? = null
+
+    abstract fun initView(root: View)
+
+    abstract fun initAction()
 
     fun onButtonPressed(uri: Uri) {
         listener?.onFragmentInteraction(uri)

@@ -32,5 +32,4 @@ dependencies {
     implementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta2'
     implementation 'com.google.android.material:material:1.1.0-alpha09'
-    implementation 'com.haibin:calendarview:3.6.7'
 }

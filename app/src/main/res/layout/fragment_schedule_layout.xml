@@ -6,26 +6,21 @@
         android:layout_height="match_parent"
         tools:context=".fragment.ScheduleFragment">
 
-    <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/hello_blank_fragment" />
-
-    <com.haibin.calendarview.CalendarView
+    <com.lee.easytodo.view.calendarview.CalendarView
             android:id="@+id/calendarView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:background="@color/colorPrimary"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:month_view_show_mode="mode_fix" />
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.lee.easytodo.view.drag.InteractDragEventRecyclerView
             android:id="@+id/recyclerViewSchedule"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
             android:layout_marginBottom="64dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/calendarView" />
